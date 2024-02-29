@@ -15,7 +15,7 @@
 #include <atomic>
 #include <condition_variable>
 #include "dlog.hpp"
-#include "dconfig.hpp"
+#include <INIReader.h>
 
 namespace daemonpp {
   class daemon {
@@ -74,7 +74,7 @@ namespace daemonpp {
 
           // Mark as running (better to have it before on_start() as user may call stop() inside on_start()).
           m_is_running = true;
-          on_start(dconfig::from_file(m_config_file));
+          on_start(INIReader(m_config_file));
           while(m_is_running.load())
           {
             on_update();
@@ -107,10 +107,10 @@ namespace daemonpp {
          * @scenarios:
          *  - when systems starts
          *  - when your run `$ systemctl start your_daemon` manually
-         * @param cfg: Installed daemon config file
+         * @param INIReader: Installed daemon config file
          * Initialize your code here...
          */
-        virtual void on_start(const dconfig& cfg) = 0;
+        virtual void on_start(const INIReader) = 0;
 
         /**
          * @brief Called every DURATION which was set by set_update_duration(DURATION).
@@ -134,7 +134,7 @@ namespace daemonpp {
          *  - when you run `$ systemctl daemon-reload` after you have changed your .conf or .service files (after reinstalling your daemon with `$ sudo make install` for example)
          * Reinitialize your code here...
          */
-        virtual void on_reload(const dconfig& cfg) = 0;
+        virtual void on_reload(const INIReader) = 0;
 
     private:
         static void signal_handler(std::int32_t sig) {
@@ -150,7 +150,7 @@ namespace daemonpp {
             // daemon.service handler: ExecReload=/bin/kill -s SIGHUP $MAINPID
             // When daemon is reloaded due updates in .service or .conf, system sends SIGHUB signal.
             case SIGHUP: {
-              instance->on_reload(dconfig::from_file(instance->m_config_file));
+              instance->on_reload(INIReader(instance->m_config_file));
               break;
             }
             default:
