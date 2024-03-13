@@ -142,6 +142,7 @@ namespace daemonpp {
           switch (sig) {
             // daemon.service handler: ExecStop=/bin/kill -s SIGTERM $MAINPID
             // When daemon is stopped, system sends SIGTERM first, if daemon didn't respond during 90 seconds, it will send a SIGKILL signal
+            case SIGINT:
             case SIGTERM:
             case SIGKILL: {
               instance->stop();
@@ -226,6 +227,7 @@ namespace daemonpp {
           std::signal(SIGHUP, signal_handler);
           // when a sudo systemctl stop my_daemon.service is ran, by default,
           // a SIGTERM is sent, followed by 90 seconds of waiting followed by a SIGKILL.
+          std::signal(SIGINT, signal_handler);
           std::signal(SIGTERM, signal_handler); // if ran: sudo systemctl stop my_daemon.service
           std::signal(SIGKILL, signal_handler); // if ran: sudo systemctl stop my_daemon.service (after 90 seconds)
 
